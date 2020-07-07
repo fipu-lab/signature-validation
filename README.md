@@ -1,4 +1,4 @@
-# SignatureExtractor
+# Signature Extractor And Validator
 **A service for extracting and validating handwritten signatures from photos**
 
 #### Service supports uploading a file on the route `extract-signature` with following options:
@@ -9,6 +9,8 @@
 
 
 
+<br>
+<br>
 
 
 ## There are a couple of methods for extracting signature (check `test.py` for more info)
@@ -28,13 +30,17 @@ cv2.imshow("extracted_signature", sig)
 cv2.waitKey(1)
 ```
 
+<br>
+<br>
 
 
 ## Examples
 
 **Original image**
+<br>
 ![](images/out/eg_0_0_0.png)
 
+<br>
 
 **Extracted signatures by different methods**
 ![](images/out/eg_0_0_1.png)
