@@ -1,5 +1,5 @@
 # SignatureExtractor
-**A service for extracting handwritten signatures from photos**
+**A service for extracting and validating handwritten signatures from photos**
 
 #### Service supports uploading a file on the route `extract-signature` with following options:
 1. Uploading a file through a form (param name **_img_**)
