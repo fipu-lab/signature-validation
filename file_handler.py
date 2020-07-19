@@ -3,7 +3,7 @@ import cv2
 import numpy as np
 
 from exception import SignatureException
-from signature_extractor import FocusedSignatureExtractor
+from signature_extractor import AdaptiveGaussianTresholdSignatureExtractor
 
 JPEG_QUALITY = 80
 ENCODING_BASE64 = 'base64'
@@ -38,10 +38,12 @@ def get_from_bytes(img_bytes, encoding=ENCODING_BASE64):
 def extract_signature(img, encoding=ENCODING_BASE64):
     cv2.imwrite('./images/test0.jpg', img)
 
-    se = FocusedSignatureExtractor()
+    se = AdaptiveGaussianTresholdSignatureExtractor()
     img = se.extract_and_resize(img)
 
-    cv2.imwrite('./images/test1.jpg', img)
+    # TODO: call signature validation se.validate(img)
+
+    # cv2.imwrite('./images/test1.jpg', img)
     return convert_img(img, encoding)
 
 

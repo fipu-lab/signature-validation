@@ -15,16 +15,20 @@
 
 ## There are a couple of methods for extracting signature (check `test.py` for more info)
 
-This service uses `FocusedSignatureExtractor` as it performs the best
+This service uses `AdaptiveGaussianTresholdSignatureExtractor` as it performs the best
 
 ```python
 import cv2
-from signature_extractor import FocusedSignatureExtractor
+from signature_extractor import AdaptiveGaussianTresholdSignatureExtractor
 
 img = cv2.imread("./images/original/eg0.jpeg")
 
 se = FocusedSignatureExtractor()
 sig = tex.extract_and_resize(img=img)
+
+ok, code, msg = se.validate(sig)
+if not ok:
+    print(msg)
 
 cv2.imshow("extracted_signature", sig)
 cv2.waitKey(1)
