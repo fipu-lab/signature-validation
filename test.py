@@ -41,7 +41,7 @@ def run_for_dataset(dataset_index=0):
             plt.setp(_ax.spines.values(), color="red")
             _ax.text(0, 25, e.message, color="red")
 
-    datasets = [[15, "jpeg"], [25, "jpg"], [4, "png"]]
+    datasets = [[15, "jpeg"], [34, "jpg"], [4, "png"]]
 
     size, ext = datasets[dataset_index]
 

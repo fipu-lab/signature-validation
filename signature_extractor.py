@@ -26,7 +26,7 @@ class SignatureExtractor:
         #cv2.bilateralFilter(img, 9, 90, 16)
         #img = cv2.GaussianBlur(img, (5, 5), 0)
 
-        cv2.bilateralFilter(img, -1, 150, 16)
+        # img = cv2.bilateralFilter(img, -1, 150, 16)
         img = cv2.GaussianBlur(img, (3, 3), 0)
 
         return img
