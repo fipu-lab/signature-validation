@@ -85,10 +85,11 @@ def extract_signature():
 
 @app.errorhandler(SignatureException)
 def handle_image_exception(error):
-    response = jsonify(error.to_dict())
+    out = error.to_dict(get_response_encoding())
+    response = jsonify(out)
     response.status_code = error.status_code
     return response
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(host="0.0.0.0", port="7000")

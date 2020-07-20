@@ -11,7 +11,15 @@ ENCODING_BYTES = 'bytes'
 
 
 def cv2_read_img(stream):
-    return cv2.imdecode(np.frombuffer(stream, np.uint8), cv2.IMREAD_UNCHANGED)
+    try:
+        img = cv2.imdecode(np.frombuffer(stream, np.uint8), cv2.IMREAD_UNCHANGED)
+
+        if img is None:
+            raise SignatureException('Invalid image format/encoding')
+    except:
+        raise SignatureException('Invalid image format/encoding')
+
+    return img
 
 
 def get_from_file(file, encoding=ENCODING_BASE64):
@@ -29,10 +37,7 @@ def get_from_base64(uri, encoding=ENCODING_BASE64):
 
 
 def get_from_bytes(img_bytes, encoding=ENCODING_BASE64):
-    try:
-        return extract_signature(img_bytes, encoding)
-    except:
-        raise SignatureException("Invalid image bytes")
+    return extract_signature(cv2_read_img(img_bytes), encoding)
 
 
 def extract_signature(img, encoding=ENCODING_BASE64):
@@ -46,7 +51,7 @@ def extract_signature(img, encoding=ENCODING_BASE64):
 
     se.validate(sig)
 
-    # cv2.imwrite('./images/test1.jpg', img)
+    cv2.imwrite('./images/test1.jpg', sig)
     return convert_img(sig, encoding)
 
 

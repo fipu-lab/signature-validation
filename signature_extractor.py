@@ -90,23 +90,27 @@ class SignatureExtractor:
         :param img:
         """
         # English messages
-        msg_dict = {0: "Ok",
-                    1: "Image is blurry"}
+        msg_dict = {
+            "ok": "Ok",
+            "image_blurry": "Image is blurry"
+        }
 
         if self.lang == "cro":
             # Croatian images
-            msg_dict = {0: "Ok",
-                        1: "Slika je mutna"} # , izoštri kameru i drži je mirno prije slikanja potpisa
+            msg_dict = {
+                "ok": "Ok",
+                "image_blurry": "Slika je mutna" # , izoštri kameru i drži je mirno prije slikanja potpisa
+            }
 
-        error_code = 0
+        error_code = "ok"
 
         img_bw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         val = cv2.Laplacian(img_bw, cv2.CV_64F).var()
 
         if val < 5:
-            error_code = 1
+            error_code = "image_blurry"
 
-        if error_code != 0:
+        if error_code != "ok":
             raise SignatureException(message=msg_dict[error_code], error_code=error_code)
 
     def validate(self, sig):
@@ -120,17 +124,21 @@ class SignatureExtractor:
         :return:
         """
         # English messages
-        msg_dict = {0: "Ok",
-                    10: "Signature is not clearly visible",
-                    11: "Signature is overemphasized or an error occurred in image processing"}
+        msg_dict = {
+            "ok": "Ok",
+            "sig_not_visible": "Signature is not clearly visible",
+            "sig_overemphasized": "Signature is overemphasized or an error occurred in image processing"
+        }
 
         if self.lang == "cro":
             # Croatian messages
-            msg_dict = {0: "Ok",
-                        10: "Potpis nije dovoljno jasno vidljiv", # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
-                        11: "Potpis je prenaglašen ili je došlo do pogreške prilikom obrade slike"} # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+            msg_dict = {
+                "ok": "Ok",
+                "sig_not_visible": "Potpis nije dovoljno jasno vidljiv", # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+                "sig_overemphasized": "Potpis je prenaglašen ili je došlo do pogreške prilikom obrade slike" # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+            }
 
-        error_code = 0
+        error_code = "ok"
 
         top_limit = sig.shape[0] * sig.shape[1] * 0.1
         bottom_limit = sig.shape[0] * sig.shape[1] * 0.003
@@ -138,12 +146,12 @@ class SignatureExtractor:
         n_dark = len(np.where(sig < 20)[0])
 
         if n_dark < bottom_limit: # Signature contains under the limmit amount of dark pixels
-            error_code = 10
+            error_code = "sig_not_visible"
         elif n_dark > top_limit: # Signature contains over the limmit amount of dark pixels
-            error_code = 11
+            error_code = "sig_overemphasized"
 
         if error_code != 0:
-            raise SignatureException(message=msg_dict[error_code], error_code=error_code)
+            raise SignatureException(message=msg_dict[error_code], error_code=error_code, img=sig)
 
     @staticmethod
     def resize_and_keep_ratio(img, size):
