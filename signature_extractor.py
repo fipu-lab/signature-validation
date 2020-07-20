@@ -150,7 +150,7 @@ class SignatureExtractor:
         elif n_dark > top_limit: # Signature contains over the limmit amount of dark pixels
             error_code = "sig_overemphasized"
 
-        if error_code != 0:
+        if error_code != "ok":
             raise SignatureException(message=msg_dict[error_code], error_code=error_code, img=sig)
 
     @staticmethod
