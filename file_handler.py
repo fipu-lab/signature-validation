@@ -39,12 +39,15 @@ def extract_signature(img, encoding=ENCODING_BASE64):
     cv2.imwrite('./images/test0.jpg', img)
 
     se = AdaptiveGaussianTresholdSignatureExtractor()
-    img = se.extract_and_resize(img)
 
-    # TODO: call signature validation se.validate(img)
+    se.pre_validate(img)
+
+    sig = se.extract_and_resize(img)
+
+    se.validate(sig)
 
     # cv2.imwrite('./images/test1.jpg', img)
-    return convert_img(img, encoding)
+    return convert_img(sig, encoding)
 
 
 def convert_img(img, method):

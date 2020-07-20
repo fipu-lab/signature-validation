@@ -2,9 +2,14 @@ from skimage.filters import threshold_triangle, threshold_yen, threshold_otsu, t
 from skimage.util import img_as_ubyte
 import numpy as np
 import cv2
+from exception import SignatureException
 
 
 class SignatureExtractor:
+
+    def __init__(self, lang="cro"):
+        assert lang in ["cro", "eng"]
+        self.lang = lang
 
     def extract(self, img):
         return self._extract(img)
@@ -78,36 +83,67 @@ class SignatureExtractor:
         content = img[t:b, l:r]
         return content
 
+    def pre_validate(self, img):
+        """
+        Image passes validation if:
+            - is not blurry
+        :param img:
+        """
+        # English messages
+        msg_dict = {0: "Ok",
+                    1: "Image is blurry"}
+
+        if self.lang == "cro":
+            # Croatian images
+            msg_dict = {0: "Ok",
+                        1: "Slika je mutna"} # , izoštri kameru i drži je mirno prije slikanja potpisa
+
+        error_code = 0
+
+        img_bw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        val = cv2.Laplacian(img_bw, cv2.CV_64F).var()
+
+        if val < 5:
+            error_code = 1
+
+        if error_code != 0:
+            raise SignatureException(message=msg_dict[error_code], error_code=error_code)
+
     def validate(self, sig):
         """
         Signature passes validation if:
-            - percentage of darker pixels is in between 0.5% and 10%
+            - percentage of darker pixels is in between 0.3% and 10%
             - TODO: check if signature is well rotated
             - TODO: check if the pixels are scattered to much for a good signature
 
         :param sig: processed image
-        :return: ok - False if validaton fails, otherwise True. err_code - error code. error_msg - error message
+        :return:
         """
-
+        # English messages
         msg_dict = {0: "Ok",
-                    1: "Signature contains under the limmit amount of dark pixels",
-                    2: "Signature contains over the limmit amount of dark pixels"}
-        ok = True
+                    10: "Signature is not clearly visible",
+                    11: "Signature is overemphasized or an error occurred in image processing"}
+
+        if self.lang == "cro":
+            # Croatian messages
+            msg_dict = {0: "Ok",
+                        10: "Potpis nije dovoljno jasno vidljiv", # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+                        11: "Potpis je prenaglašen ili je došlo do pogreške prilikom obrade slike"} # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+
         error_code = 0
 
         top_limit = sig.shape[0] * sig.shape[1] * 0.1
-        bottom_limit = sig.shape[0] * sig.shape[1] * 0.005
+        bottom_limit = sig.shape[0] * sig.shape[1] * 0.003
 
-        #unique, counts = np.unique(sig, return_counts=True)
-        #n_dark = dict(zip(unique, counts)).get(0, 0)
         n_dark = len(np.where(sig < 20)[0])
 
-        if n_dark < bottom_limit:
-            ok, error_code = False, 1
-        elif n_dark > top_limit:
-            ok, error_code = False, 2
+        if n_dark < bottom_limit: # Signature contains under the limmit amount of dark pixels
+            error_code = 10
+        elif n_dark > top_limit: # Signature contains over the limmit amount of dark pixels
+            error_code = 11
 
-        return ok, error_code, msg_dict[error_code]
+        if error_code != 0:
+            raise SignatureException(message=msg_dict[error_code], error_code=error_code)
 
     @staticmethod
     def resize_and_keep_ratio(img, size):
