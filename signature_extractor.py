@@ -11,7 +11,18 @@ class SignatureExtractor:
         assert lang in ["cro", "eng"]
         self.lang = lang
 
+    def _prepare_img(self, img):
+
+        if img.shape[2] > 3: # 4 channels - convert transparent to white
+
+            trans_mask = img[:, :, 3] == 0
+            img[trans_mask] = [255, 255, 255, 255]
+            img = img[:, :, :3]
+
+        return img
+
     def extract(self, img):
+        img = self._prepare_img(img)
         return self._extract(img)
 
     def extract_and_resize(self, img, size=(500, 100)):
@@ -116,7 +127,7 @@ class SignatureExtractor:
     def validate(self, sig):
         """
         Signature passes validation if:
-            - percentage of darker pixels is in between 0.3% and 10%
+            - percentage of darker pixels is in between 0.05% and 10%
             - TODO: check if signature is well rotated
             - TODO: check if the pixels are scattered to much for a good signature
 
@@ -141,7 +152,7 @@ class SignatureExtractor:
         error_code = "ok"
 
         top_limit = sig.shape[0] * sig.shape[1] * 0.1
-        bottom_limit = sig.shape[0] * sig.shape[1] * 0.003
+        bottom_limit = sig.shape[0] * sig.shape[1] * 0.0005
 
         n_dark = len(np.where(sig < 20)[0])
 

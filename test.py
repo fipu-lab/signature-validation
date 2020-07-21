@@ -28,7 +28,7 @@ def run_for_dataset(dataset_index=0):
             _se.pre_validate(_img)
         except SignatureException as e:
             plt.setp(_ax.spines.values(), color="red")
-            _ax.text(0, 10, e.message, color="purple")
+            _ax.text(0, 10, e.error_code, color="purple") # e.message
 
         _sig = _se.extract_and_resize(_img)
 
@@ -39,15 +39,15 @@ def run_for_dataset(dataset_index=0):
             _se.validate(_sig)
         except SignatureException as e:
             plt.setp(_ax.spines.values(), color="red")
-            _ax.text(0, 25, e.message, color="red")
+            _ax.text(0, 25, e.error_code, color="red") # e.message
 
-    datasets = [[15, "jpeg"], [34, "jpg"], [4, "png"]]
+    datasets = [[15, "jpeg"], [35, "jpg"], [10, "png"]]
 
     size, ext = datasets[dataset_index]
 
     for i in range(size+1):
 
-        img = cv2.imread("./images/original/eg{0}.{1}".format(i, ext))
+        img = cv2.imread("./images/original/eg{0}.{1}".format(i, ext), cv2.IMREAD_UNCHANGED)
 
         assert img is not None, "Image cannot be none!"
 
