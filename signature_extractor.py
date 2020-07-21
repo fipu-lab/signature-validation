@@ -99,7 +99,7 @@ class SignatureExtractor:
             # Croatian images
             msg_dict = {
                 "ok": "Ok",
-                "image_blurry": "Slika je mutna" # , izoštri kameru i drži je mirno prije slikanja potpisa
+                "image_blurry": "Slika potpisa je mutna, izoštri fokus prije slikanja i drži mobitel/kameru mirno prije slikanja potpisa"
             }
 
         error_code = "ok"
@@ -134,8 +134,8 @@ class SignatureExtractor:
             # Croatian messages
             msg_dict = {
                 "ok": "Ok",
-                "sig_not_visible": "Potpis nije dovoljno jasno vidljiv", # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
-                "sig_overemphasized": "Potpis je prenaglašen ili je došlo do pogreške prilikom obrade slike" # , slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv
+                "sig_not_visible": "Potpis nije dovoljno jasno vidljiv, slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv",
+                "sig_overemphasized": "Potpis je prenaglašen ili je došlo do pogreške prilikom obrade slike, slikaj potpis na bijelom papiru sa običnom plavom kemijskom iz prikladne blizine da je potpis jasno vidljiv"
             }
 
         error_code = "ok"
