@@ -1,11 +1,7 @@
 import matplotlib.pyplot as plt
 import cv2
 from exception import SignatureException
-from signature_extractor import TresholdSignatureExtractor, OtsuTresholdSignatureExtractor,\
-                                AdaptiveMeanTresholdSignatureExtractor, AdaptiveGaussianTresholdSignatureExtractor,\
-                                MorphologySignatureExtractor, MaskedSignatureExtractor, \
-                                GlobalOtsuTresholdSignatureExtractor, TriangleTresholdSignatureExtractor, \
-                                YenTresholdSignatureExtractor, BinaryLocalTresholdSignatureExtractor
+from signature_extractor import *
 
 
 tex = TresholdSignatureExtractor()
@@ -20,26 +16,29 @@ ytse = YenTresholdSignatureExtractor()
 maskse = MaskedSignatureExtractor()
 
 
+def plot_sig(_se, _ax, _img, _title):
+
+    try:
+        _se.pre_validate(_img)
+    except SignatureException as e:
+        plt.setp(_ax.spines.values(), color="red")
+        _ax.text(0, 10, e.error_code, color="purple") # e.message
+
+    _sig = _se.extract_and_resize(_img)
+
+    _sig = _se.prettify(_sig)
+
+    _ax.imshow(_sig, cmap="gray")
+    _ax.title.set_text(_title)
+
+    try:
+        _se.validate(_sig)
+    except SignatureException as e:
+        plt.setp(_ax.spines.values(), color="red")
+        _ax.text(0, 25, e.error_code, color="red") # e.message
+
+
 def run_for_dataset(dataset_index=0):
-
-    def plot_sig(_se, _ax, _img, _title):
-
-        try:
-            _se.pre_validate(_img)
-        except SignatureException as e:
-            plt.setp(_ax.spines.values(), color="red")
-            _ax.text(0, 10, e.error_code, color="purple") # e.message
-
-        _sig = _se.extract_and_resize(_img)
-
-        _ax.imshow(_sig, cmap="gray")
-        _ax.title.set_text(_title)
-
-        try:
-            _se.validate(_sig)
-        except SignatureException as e:
-            plt.setp(_ax.spines.values(), color="red")
-            _ax.text(0, 25, e.error_code, color="red") # e.message
 
     datasets = [[15, "jpeg"], [35, "jpg"], [10, "png"]]
 
@@ -77,7 +76,25 @@ def run_for_dataset(dataset_index=0):
         plt.close(plt.gcf())
 
 
-if __name__ == "__main__":
+def run_all():
     run_for_dataset(0)
     run_for_dataset(1)
     run_for_dataset(2)
+
+
+def run_for_file(src="./images/nt.png"):
+
+    #src = "./images/nt.png"
+    ext = src.split(".")[-1]
+
+    img = cv2.imread(src, cv2.IMREAD_UNCHANGED)
+
+    sig = tex.extract_and_resize(img)
+    sig = tex.prettify(sig)
+    cv2.imwrite(src.replace("."+ext, "_1."+ext), sig)
+
+
+if __name__ == "__main__":
+
+    run_all()
+    pass

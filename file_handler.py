@@ -48,6 +48,8 @@ def extract_signature(img, encoding=ENCODING_BASE64):
 
     sig = se.extract_and_resize(img)
 
+    sig = se.prettify(sig)
+
     se.validate(sig)
 
     # TODO: Dev - remove

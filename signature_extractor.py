@@ -164,6 +164,15 @@ class SignatureExtractor:
         if error_code != "ok":
             raise SignatureException(message=msg_dict[error_code], error_code=error_code, img=sig)
 
+    def prettify(self, sig):
+        """
+        Post proccessing on signature:
+            - remove noise
+            - ...
+        """
+        sig = cv2.fastNlMeansDenoising(sig.astype(np.uint8), dst=None, h=10, templateWindowSize=7, searchWindowSize=21)
+        return sig
+
     @staticmethod
     def resize_and_keep_ratio(img, size):
         #print("resize_and_keep_ratio:", img.shape, size)
