@@ -41,7 +41,6 @@ def get_from_bytes(img_bytes, encoding=ENCODING_BASE64):
 
 
 def extract_signature(img, encoding=ENCODING_BASE64):
-    cv2.imwrite('./images/test0.jpg', img)
 
     se = AdaptiveGaussianTresholdSignatureExtractor()
 
@@ -51,6 +50,8 @@ def extract_signature(img, encoding=ENCODING_BASE64):
 
     se.validate(sig)
 
+    # TODO: Dev - remove
+    cv2.imwrite('./images/test0.jpg', se._prepare_img(img))
     cv2.imwrite('./images/test1.jpg', sig)
     return convert_img(sig, encoding)
 
