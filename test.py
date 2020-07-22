@@ -40,7 +40,7 @@ def plot_sig(_se, _ax, _img, _title):
 
 def run_for_dataset(dataset_index=0):
 
-    datasets = [[15, "jpeg"], [35, "jpg"], [10, "png"]]
+    datasets = [[15, "jpeg"], [35, "jpg"], [15, "png"]]
 
     size, ext = datasets[dataset_index]
 
@@ -89,8 +89,9 @@ def run_for_file(src="./images/nt.png"):
 
     img = cv2.imread(src, cv2.IMREAD_UNCHANGED)
 
-    sig = tex.extract_and_resize(img)
-    sig = tex.prettify(sig)
+    sig = agtse.extract_and_resize(img)
+    sig = agtse.prettify(sig)
+
     cv2.imwrite(src.replace("."+ext, "_1."+ext), sig)
 
 

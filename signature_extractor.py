@@ -13,8 +13,17 @@ class SignatureExtractor:
 
     def _prepare_img(self, img):
 
-        if img.shape[2] > 3: # 4 channels - convert transparent to white
+        if img.shape[2] > 3: # 4 channels - deal with transparency
 
+            # Crop-out as much as possible of the transparent part of the image
+            y, x = img[:, :, 3].nonzero() # get the nonzero alpha coordinates
+            minx = np.min(x)
+            miny = np.min(y)
+            maxx = np.max(x)
+            maxy = np.max(y)
+            img = img[miny:maxy, minx:maxx]
+
+            # convert the rest of transparent pixels to white
             trans_mask = img[:, :, 3] == 0
             img[trans_mask] = [255, 255, 255, 255]
             img = img[:, :, :3]
