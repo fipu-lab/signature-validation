@@ -89,10 +89,10 @@ def run_for_file(src="./images/nt.png"):
 
     img = cv2.imread(src, cv2.IMREAD_UNCHANGED)
 
-    sig = agtse.extract_and_resize(img)
+    sig = agtse.extract_and_resize(img, size=(500, 50))
     sig = agtse.prettify(sig)
 
-    cv2.imwrite(src.replace("."+ext, "_1."+ext), sig)
+    cv2.imwrite(src.replace("."+ext, "_1.png"), sig)
 
 
 if __name__ == "__main__":
