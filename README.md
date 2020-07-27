@@ -44,8 +44,12 @@ Note: if there is an error with the image, the processed image will be returned 
 Example:
 {
     "img": "/9j/4AA...",
-    "error_code": "image_blurry",
-    "message": "Image is blurry"
+    "errors": [
+        {
+            "error_code": "image_blurry",
+            "message": "Image is blurry"
+        }
+    ]
 }
 """
 
