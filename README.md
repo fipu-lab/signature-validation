@@ -108,7 +108,7 @@ cv2.waitKey(1)
 **Image validation:**
 - Validate if the image could be an image with a signature, not some random image:
     - A possible approach is to use color clustering to analyze color distributions within the image and use it to evaluate if the scene is significantly different and/or more complex then it should be
-    - ![Image color summarizer](http://mkweb.bcgsc.ca/colorsummarizer/) ![Upload form](http://mkweb.bcgsc.ca/colorsummarizer/?analyze)
+    - [Image color summarizer](http://mkweb.bcgsc.ca/colorsummarizer/) [Upload form](http://mkweb.bcgsc.ca/colorsummarizer/?analyze)
 
 **Signature processing:**
 - Clear-up the signature (denoising)
