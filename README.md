@@ -6,8 +6,51 @@
 2. Uploading a file in base64 encoding (param name **_img64_**)
 3. Uploading a file encoded as bytes (param name **_img_bytes_**)
 4. Specifiying output encoding (param name **_resp_enc_**)
+5. Specifiying output sizes of signature (param name **_img_sizes_**: dictionary of dimensions)
+
+<br>
+
+**Python request example:**
+```python
+import requests
+import base64
+import cv2
+import json
+
+url = "http://localhost:7000/extract-signature"
+
+img = cv2.imread("./images/original/0.jpeg", cv2.IMREAD_UNCHANGED)
+
+retval, buffer = cv2.imencode('.jpg', img)
+
+img64 = base64.b64encode(buffer)
+
+r = requests.post(url, json={"img64": img64.decode(), "img_sizes": {"img": (400, 70), "img_small": (300, 50)}}, timeout=2.0)
+
+content = json.loads(r.text)
+
+print(content)
+
+"""
+Will print a dictionary with resized images
+
+{
+    "img": "/9j/4AA...",
+    "img_small": "/9j/4AA..."
+}
 
 
+Note: if there is an error with the image, the processed image will be returned in "img" key, with additional values in "error_code" and "message"
+Example:
+{
+    "img": "/9j/4AA...",
+    "error_code": "image_blurry",
+    "message": "Image is blurry"
+}
+"""
+
+
+```
 
 <br>
 <br>
@@ -21,14 +64,23 @@ This service uses `AdaptiveGaussianTresholdSignatureExtractor` as it performs th
 import cv2
 from signature_extractor import AdaptiveGaussianTresholdSignatureExtractor
 
-img = cv2.imread("./images/original/eg0.jpeg")
+img = cv2.imread("./images/original/0.jpeg")
 
 se = FocusedSignatureExtractor()
+
+try:
+    se.pre_validate(img)
+except SignatureException as e:
+    print(e.error_code)
+
 sig = tex.extract_and_resize(img=img)
 
-ok, code, msg = se.validate(sig)
-if not ok:
-    print(msg)
+sig = se.prettify(sig)
+
+try:
+    se.validate(sig)
+except SignatureException as e:
+    print(e.error_code)
 
 cv2.imshow("extracted_signature", sig)
 cv2.waitKey(1)
@@ -42,12 +94,12 @@ cv2.waitKey(1)
 
 **Original image**
 <br>
-![](images/out/eg_0_0_0.png)
+![](images/out/0_0.png)
 
 <br>
 
 **Extracted signatures by different methods**
-![](images/out/eg_0_0_1.png)
+![](images/out/0_1.png)
 
 <br>
 <br>

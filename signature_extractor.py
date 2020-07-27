@@ -112,6 +112,8 @@ class SignatureExtractor:
 
     def resize(self, sig, size=(500, 100)):
 
+        size = (size[0], size[1]) # ensure tuple
+
         t, b, l, r = self.find_roi(sig)
         content = sig[t:b, l:r]
 

@@ -10,6 +10,7 @@ IMG_FILE = 'img'
 IMG_FILE64 = 'img64'
 IMG_FILE_BYTES = 'img_bytes'
 IMG_RESPONSE_ENCODING = 'resp_enc'
+IMG_SIZES = 'img_sizes'
 ALLOWED_KEYS = (IMG_FILE, IMG_FILE64, IMG_FILE_BYTES)
 ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg')
 
@@ -42,8 +43,13 @@ def get_response_encoding():
     return get_value(IMG_RESPONSE_ENCODING) or fh.ENCODING_BASE64
 
 
-def create_response(img):
-    resp = jsonify({'img': img})
+def get_img_sizes():
+    return get_value(IMG_SIZES) or {"img": (500, 50)}
+
+
+def create_response(imgs):
+    #resp = jsonify({'img': img})
+    resp = jsonify(imgs)
     resp.status_code = 201
     return resp
 
@@ -55,8 +61,8 @@ def handle_file():
         resp.status_code = 400
         return resp
     if file and allowed_file(file.filename):
-        img = fh.get_from_file(request.files[IMG_FILE], get_response_encoding())
-        return create_response(img)
+        imgs = fh.get_from_file(request.files[IMG_FILE], get_response_encoding(), get_img_sizes())
+        return create_response(imgs)
     else:
         resp = jsonify({'message': 'Allowed file types are {0}'.format(ALLOWED_EXTENSIONS)})
         resp.status_code = 400
@@ -70,13 +76,13 @@ def extract_signature():
 
     elif is_file64():
         file64 = get_value(IMG_FILE64)
-        img = fh.get_from_base64(file64, get_response_encoding())
-        return create_response(img)
+        imgs = fh.get_from_base64(file64, get_response_encoding(), get_img_sizes())
+        return create_response(imgs)
 
     elif is_file_bytes():
         file_bytes = get_value(IMG_FILE_BYTES)
-        img = fh.get_from_bytes(file_bytes, get_response_encoding())
-        return create_response(img)
+        imgs = fh.get_from_bytes(file_bytes, get_response_encoding(), get_img_sizes())
+        return create_response(imgs)
 
     resp = jsonify({'message': 'No image in the request. Use {} in either form or json request'.format(ALLOWED_KEYS)})
     resp.status_code = 400
