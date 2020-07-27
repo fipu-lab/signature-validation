@@ -56,8 +56,16 @@ class SignatureExtractor:
         img = self._prepare_img(img)
         return self._extract(img)
 
-    def extract_and_resize(self, img, size=(500, 100)):
+    def run(self, img, size=(500, 100)):
+
+        self.pre_validate(img)
+
         sig = self.extract(img)
+
+        sig = self.prettify(sig)
+
+        self.validate(sig)
+
         return self.resize(sig, size)
 
     def _extract(self, img):
@@ -192,7 +200,7 @@ class SignatureExtractor:
     def validate(self, sig):
         """
         Signature passes validation if:
-            - percentage of darker pixels is in between 0.01% and 10%
+            - percentage of darker pixels is in between 0.1% and 20%
             - TODO: check if signature is well rotated
             - TODO: check if the pixels are scattered to much for a good signature
 
@@ -216,10 +224,11 @@ class SignatureExtractor:
 
         error_code = "ok"
 
-        top_limit = sig.shape[0] * sig.shape[1] * 0.1
-        bottom_limit = sig.shape[0] * sig.shape[1] * 0.0001
+        sig_flat = sig.flatten()
+        top_limit = len(sig_flat) * 0.20
+        bottom_limit = len(sig_flat) * 0.001
 
-        n_dark = len(np.where(sig < 20)[0])
+        n_dark = len(np.where(sig_flat < 200)[0])
 
         if n_dark < bottom_limit: # Signature contains under the limmit amount of dark pixels
             error_code = "sig_not_visible"

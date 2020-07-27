@@ -70,14 +70,14 @@ from signature_extractor import AdaptiveGaussianTresholdSignatureExtractor
 
 img = cv2.imread("./images/original/0.jpeg")
 
-se = FocusedSignatureExtractor()
+se = AdaptiveGaussianTresholdSignatureExtractor()
 
 try:
     se.pre_validate(img)
 except SignatureException as e:
     print(e.error_code)
 
-sig = tex.extract_and_resize(img=img)
+sig = se.extract(img)
 
 sig = se.prettify(sig)
 
@@ -85,6 +85,8 @@ try:
     se.validate(sig)
 except SignatureException as e:
     print(e.error_code)
+
+sig = se.resize(sig)
 
 cv2.imshow("extracted_signature", sig)
 cv2.waitKey(1)

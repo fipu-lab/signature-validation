@@ -64,7 +64,6 @@ def get_img_sizes():
 
 
 def create_response(imgs):
-    #resp = jsonify({'img': img})
     resp = jsonify(imgs)
     resp.status_code = 201
     return resp

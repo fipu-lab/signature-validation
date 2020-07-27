@@ -45,18 +45,19 @@ def plot_sig(_se, _ax, _img, _title):
         plt.setp(_ax.spines.values(), color="red")
         _ax.text(0, 10, e.error_code, color="purple") # e.message
 
-    _sig = _se.extract_and_resize(_img)
+    _sig = _se.extract(_img)
 
     _sig = _se.prettify(_sig)
-
-    _ax.imshow(_sig, cmap="gray")
-    _ax.title.set_text(_title)
 
     try:
         _se.validate(_sig)
     except SignatureException as e:
         plt.setp(_ax.spines.values(), color="red")
         _ax.text(0, 25, e.error_code, color="red") # e.message
+
+    _sig = _se.resize(_sig)
+    _ax.imshow(_sig, cmap="gray")
+    _ax.title.set_text(_title)
 
 
 def run_for_all():
@@ -102,8 +103,13 @@ def run_for_file(src="./images/nt.png"):
 
     agtse.pre_validate(img)
 
-    sig = agtse.extract_and_resize(img, size=(500, 50))
+    sig = agtse.extract(img)
+
     sig = agtse.prettify(sig)
+
+    agtse.validate(sig)
+
+    sig = agtse.resize(sig, size=(500, 50))
 
     cv2.imwrite(src.replace("."+ext, "_1.png"), sig)
 
@@ -124,13 +130,15 @@ def debug(se_class, dataset_folder="./images/original/"):
         except SignatureException as e:
             print(i, e.error_code)
 
-        sig = se.extract_and_resize(img, size=(500, 50))
+        sig = se.extract(img)
         sig = se.prettify(sig)
 
         try:
             se.validate(sig)
         except SignatureException as e:
             print(i, e.error_code)
+
+        sig = se.resize(sig)
 
         se._verbose(sig, "final")
         cv2.imwrite(verbose_folder + str(i) + "_0.png", img)

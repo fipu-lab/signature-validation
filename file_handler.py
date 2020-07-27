@@ -49,7 +49,6 @@ def extract_signature(img, encoding=ENCODING_BASE64, sizes={"img": (500, 50)}):
 
     se.pre_validate(img)
 
-    #sig = se.extract_and_resize(img, size=(500, 50))
     sig = se.extract(img)
 
     sig = se.prettify(sig)
