@@ -2,14 +2,32 @@ from skimage.filters import threshold_triangle, threshold_yen, threshold_otsu, t
 from skimage.util import img_as_ubyte
 import numpy as np
 import cv2
+import os
 from exception import SignatureException
 
 
 class SignatureExtractor:
 
-    def __init__(self, lang="cro"):
+    def __init__(self, lang="cro", verbose=0, img_name=None):
         assert lang in ["cro", "eng"]
         self.lang = lang
+        self.verbose = verbose
+        self.img_name = img_name
+
+        assert verbose > 0 and img_name is not None or verbose == 0, "Image name must be set when using verbose mode"
+
+        if verbose > 0:
+            self._verbose_counter = 0
+            self._verbose_folder = "./__verbose__/" + img_name + "/"
+            os.makedirs(self._verbose_folder, exist_ok=True)
+
+    def _verbose(self, img, operation, info=""):
+        out = img.copy()
+
+        if self.verbose == 2:
+            cv2.putText(out, info, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0))
+            cv2.imwrite(self._verbose_folder + str(self._verbose_counter) + "_" + operation + ".png", out)
+            self._verbose_counter += 1
 
     def _prepare_img(self, img):
 
@@ -28,9 +46,13 @@ class SignatureExtractor:
             img[trans_mask] = [255, 255, 255, 255]
             img = img[:, :, :3]
 
+        self._verbose(img, "prepared_image")
+
         return img
 
     def extract(self, img):
+        self._verbose(img, "original")
+
         img = self._prepare_img(img)
         return self._extract(img)
 
@@ -48,6 +70,7 @@ class SignatureExtractor:
 
         # img = cv2.bilateralFilter(img, -1, 150, 16)
         img = cv2.GaussianBlur(img, (3, 3), 0)
+        self._verbose(img, "blurred")
 
         return img
 
@@ -92,15 +115,44 @@ class SignatureExtractor:
         t, b, l, r = self.find_roi(sig)
         content = sig[t:b, l:r]
 
-        # TODO: to 1x5cm
         resized = SignatureExtractor.resize_and_keep_ratio(content, size)
 
+        self._verbose(resized, "resized")
         return resized
 
-    def find_content_with_canny(self, img):
-        canny = cv2.Canny(img, 0, 255)
+    def find_content(self, image):
+        img = image.copy()
+
+        """
+        # Zero-parameter, automatic canny
+        sigma = .33
+        v = np.median(img)
+        lower = int(max(0, (1.0 - sigma) * v))
+        upper = int(min(255, (1.0 + sigma) * v))
+        canny = cv2.Canny(img, lower, upper)
+        """
+
+        #canny = cv2.Canny(img, 0, 255)
+        #canny = cv2.Canny(img, 0, 100)
+        #canny = cv2.Canny(img, 40, 120)
+        #canny = cv2.Canny(img, 100, 255)
+        #t, b, l, r = self.find_roi(cv2.bitwise_not(canny))
+        #self._verbose(canny[t:b, l:r], "find_content")
+
+        img = cv2.GaussianBlur(img, (7, 7), 0)
+        kernel = np.ones((7, 7), np.uint8)
+
+        img = cv2.fastNlMeansDenoising(img.astype(np.uint8), dst=None, h=10, templateWindowSize=7, searchWindowSize=21)
+        opening = cv2.morphologyEx(img, cv2.MORPH_GRADIENT, kernel)
+
+        tresh = cv2.adaptiveThreshold(cv2.bitwise_not(opening), 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 55, 10)
+        canny = cv2.Canny(tresh, 50, 255)
+
         t, b, l, r = self.find_roi(cv2.bitwise_not(canny))
-        content = img[t:b, l:r]
+        self._verbose(canny[t:b, l:r], "find_content")
+
+        content = image[t:b, l:r]
+
         return content
 
     def pre_validate(self, img):
@@ -127,7 +179,9 @@ class SignatureExtractor:
         img_bw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         val = cv2.Laplacian(img_bw, cv2.CV_64F).var()
 
-        if val < 5:
+        self._verbose(img_bw, "blur_validation", "Laplacian var: {0}".format(val))
+
+        if val < 1:
             error_code = "image_blurry"
 
         if error_code != "ok":
@@ -136,7 +190,7 @@ class SignatureExtractor:
     def validate(self, sig):
         """
         Signature passes validation if:
-            - percentage of darker pixels is in between 0.05% and 10%
+            - percentage of darker pixels is in between 0.01% and 10%
             - TODO: check if signature is well rotated
             - TODO: check if the pixels are scattered to much for a good signature
 
@@ -161,7 +215,7 @@ class SignatureExtractor:
         error_code = "ok"
 
         top_limit = sig.shape[0] * sig.shape[1] * 0.1
-        bottom_limit = sig.shape[0] * sig.shape[1] * 0.0005
+        bottom_limit = sig.shape[0] * sig.shape[1] * 0.0001
 
         n_dark = len(np.where(sig < 20)[0])
 
@@ -187,8 +241,8 @@ class SignatureExtractor:
         #print("resize_and_keep_ratio:", img.shape, size)
 
         h, w = img.shape
-        sh, sw = size
-        ratio = sh / sw
+        _w, _h = size
+        ratio = _w / _h
 
         if h / w < ratio:
             padding = int((h * ratio - w) / 2)
@@ -218,7 +272,7 @@ class TresholdSignatureExtractor(SignatureExtractor):
         #th, im_th = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY_INV)
         #return cv2.bitwise_not(im_th)
 
-        img = self.find_content_with_canny(img)
+        img = self.find_content(img)
         img = self.add_blur(img)
 
         th, im_th = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY)
@@ -230,7 +284,7 @@ class OtsuTresholdSignatureExtractor(SignatureExtractor):
     def _extract(self, img):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        img = self.find_content_with_canny(img)
+        img = self.find_content(img)
         img = self.add_blur(img)
 
         th, im_th = cv2.threshold(img, 127, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
@@ -244,7 +298,7 @@ class AdaptiveMeanTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        img = self.find_content_with_canny(img)
+        img = self.find_content(img)
         img = self.add_blur(img)
         out_img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_MEAN_C, cv2.THRESH_BINARY, 55, 10)
 
@@ -269,7 +323,7 @@ class AdaptiveGaussianTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        img = self.find_content_with_canny(img)
+        img = self.find_content(img)
         img = self.add_blur(img)
 
         out_img = cv2.adaptiveThreshold(img, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 55, 10)
@@ -337,7 +391,7 @@ class FocusedSignatureExtractor(SignatureExtractor):
         #canny = cv2.Canny(img, 0, 255)
         #t, b, l, r = self.find_roi(cv2.bitwise_not(canny))
         #content = img[t:b, l:r]
-        content = self.find_content_with_canny(img)
+        content = self.find_content(img)
 
         content = self.add_blur(content)
         out_img = cv2.adaptiveThreshold(content, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 55, 10)
@@ -351,7 +405,7 @@ class GlobalOtsuTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        content = self.find_content_with_canny(img)
+        content = self.find_content(img)
         content = self.add_blur(content)
 
         img = img_as_ubyte(content)
@@ -370,7 +424,7 @@ class TriangleTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        content = self.find_content_with_canny(img)
+        content = self.find_content(img)
         content = self.add_blur(content)
 
         treshold = img > threshold_triangle(content)
@@ -387,7 +441,7 @@ class YenTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        content = self.find_content_with_canny(img)
+        content = self.find_content(img)
         content = self.add_blur(content)
 
         treshold = img > threshold_yen(content)
@@ -404,7 +458,7 @@ class BinaryLocalTresholdSignatureExtractor(SignatureExtractor):
 
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        content = self.find_content_with_canny(img)
+        content = self.find_content(img)
         content = self.add_blur(content)
 
         local_thresh = threshold_local(content, block_size=35, offset=10)
