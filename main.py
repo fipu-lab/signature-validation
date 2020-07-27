@@ -1,6 +1,11 @@
 from flask import Flask, request, jsonify
 from exception import SignatureException
 import file_handler as fh
+import os
+from dotenv import load_dotenv
+import bugsnag
+from bugsnag.flask import handle_exceptions
+
 
 app = Flask(__name__)
 app.secret_key = "secret key"
@@ -13,6 +18,17 @@ IMG_RESPONSE_ENCODING = 'resp_enc'
 IMG_SIZES = 'img_sizes'
 ALLOWED_KEYS = (IMG_FILE, IMG_FILE64, IMG_FILE_BYTES)
 ALLOWED_EXTENSIONS = ('png', 'jpg', 'jpeg')
+
+load_dotenv()
+STAGE = os.environ.get("STAGE", os.environ.get("FLASK_ENV", "development"))
+if STAGE != "development" and "BUGSNAG_API_KEY" in os.environ and os.environ.get("BUGSNAG_API_KEY"):
+    bugsnag.configure(
+        api_key=os.environ.get("BUGSNAG_API_KEY"),
+        project_root="",
+        app_version="0.0.1",
+        release_stage=STAGE,
+    )
+    handle_exceptions(app)
 
 
 def allowed_file(filename):
@@ -95,6 +111,14 @@ def handle_image_exception(error):
     response = jsonify(out)
     response.status_code = error.status_code
     return response
+
+
+@app.errorhandler(Exception)
+def handle_exception(e):
+    bugsnag.notify(e)
+    resp = jsonify({"errors": [{"error_code": "unexpected_error", "message": "An error has occurred while processing the image. Please try again in a few moments."}]})
+    resp.status_code = 500
+    return resp
 
 
 if __name__ == "__main__":

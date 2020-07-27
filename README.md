@@ -108,6 +108,27 @@ cv2.waitKey(1)
 <br>
 <br>
 
+
+## Setup
+
+### Install required packages
+
+````bash
+pip install -r requirements.txt
+````
+
+### Environment
+
+Create a `.env` file with following content (adjustment needed):
+```bash
+FLASK_ENV=development
+BUGSNAG_API_KEY=
+```
+
+<br>
+<br>
+
+
 ## TODO
 **Image validation:**
 - Validate if the image could be an image with a signature, not some random image:

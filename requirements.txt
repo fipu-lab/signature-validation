@@ -2,3 +2,5 @@ scikit-image
 opencv-python-headless
 flask
 matplotlib
+python-dotenv
+bugsnag[flask]
