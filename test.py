@@ -20,7 +20,14 @@ maskse = MaskedSignatureExtractor()
 class Signatures:
 
     def __init__(self, dataset_folder="./images/original/"):
-        self.images = os.listdir(dataset_folder)
+        files = os.listdir(dataset_folder)
+        self.images = []
+
+        for f in files:
+            name, ext = os.path.splitext(f)
+            if ext in [".png", ".jpg", "jpeg"]:
+                self.images.append(f)
+
         self.images.sort()
         self.n = 0
 

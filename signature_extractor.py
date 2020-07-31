@@ -25,7 +25,13 @@ class SignatureExtractor:
         out = img.copy()
 
         if self.verbose == 2:
-            cv2.putText(out, info, (30, 30), cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 255, 0))
+
+            for i, line in enumerate(info.split('\n')):
+                ratio = int(img.shape[1] / 200)
+                if ratio > 2:
+                    ratio = int(ratio * .7)
+                cv2.putText(out, line, (3, (i+1)*15*ratio), cv2.FONT_HERSHEY_SIMPLEX, .5*ratio, (0, 255, 0))
+
             cv2.imwrite(self._verbose_folder + str(self._verbose_counter) + "_" + operation + ".png", out)
             self._verbose_counter += 1
 
@@ -46,8 +52,39 @@ class SignatureExtractor:
             img[trans_mask] = [255, 255, 255, 255]
             img = img[:, :, :3]
 
+        # img = self._adjust_brightness(img) # still only just experimental
         self._verbose(img, "prepared_image")
 
+        return img
+
+    def _adjust_brightness(self, img):
+        """
+        Experimental feature
+        :param img:
+        :return:
+        """
+        info = {}
+
+        def adjust_gamma(image, gamma=1.0):
+           invGamma = 1.0 / gamma
+           table = np.array([((i / 255.0) ** invGamma) * 255 for i in np.arange(0, 256)]).astype("uint8")
+           return cv2.LUT(image, table)
+
+        #info["HSV V mean"] = "{0:.2f}".format(np.mean(cv2.cvtColor(img, cv2.COLOR_BGR2HSV)[:, :, 2]))
+        brightness = np.average(np.linalg.norm(img, axis=2)) / np.sqrt(3)
+        info["Euclidean norm"] = "{0:.2f}".format(brightness)
+
+        BRIGHTNESS_TRESHOLD = 150
+        if brightness < BRIGHTNESS_TRESHOLD:
+            gamma = (1 - (brightness/BRIGHTNESS_TRESHOLD)**2) * 10
+            if gamma > 1:
+                info["Gamma"] = "{0:.2f}".format(gamma)
+                img = adjust_gamma(img, gamma)
+
+                brightness = np.average(np.linalg.norm(img, axis=2)) / np.sqrt(3)
+                info["Euclidean norm after"] = "{0:.2f}".format(brightness)
+
+        self._verbose(img, "adjust_brightness", "\n".join([k + ": " + str(v) for k, v in info.items()]))
         return img
 
     def extract(self, img):
@@ -189,7 +226,7 @@ class SignatureExtractor:
         img_bw = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         val = cv2.Laplacian(img_bw, cv2.CV_64F).var()
 
-        self._verbose(img_bw, "blur_validation", "Laplacian var: {0}".format(val))
+        self._verbose(img_bw, "blur_validation", "Laplacian var: {0:.2f}".format(val))
 
         if val < 1:
             error_code = "image_blurry"
