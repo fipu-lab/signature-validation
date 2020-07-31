@@ -136,6 +136,7 @@ BUGSNAG_API_KEY=
 - Validate if the image could be an image with a signature, not some random image:
     - A possible approach is to use color clustering to analyze color distributions within the image and use it to evaluate if the scene is significantly different and/or more complex then it should be
     - [Image color summarizer](http://mkweb.bcgsc.ca/colorsummarizer/) [Upload form](http://mkweb.bcgsc.ca/colorsummarizer/?analyze)
+    - [Finding the dominant colors of an image](https://www.timpoulsen.com/2018/finding-the-dominant-colors-of-an-image.html)
 
 **Signature processing:**
 - Clear-up the signature (denoising)
